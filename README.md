@@ -6,6 +6,7 @@ Backend API for concert ticket booking with PostgreSQL, JWT auth, Swagger, rate 
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Test Evidence](docs/API_TEST_EVIDENCE.md)
 - [Requirements Checklist](docs/REQUIREMENTS_CHECKLIST.md)
+- [Database Export Guide](database/README.md)
 
 ## Tech Stack
 - Java 21
