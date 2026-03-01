@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: booking-ticket-system
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres?currentSchema=ticketing}
+    username: ${DB_USERNAME:cinema}
+    password: ${DB_PASSWORD:admin}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 30000
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+server:
+  port: 8080
+
+auth:
+  jwt:
+    secret: 4f8f4f1ddfb44b2c98772a2fc7f80f6a4f8f4f1ddfb44b2c98772a2fc7f80f6a
+    expiration-minutes: 120
+  users:
+    - username: admin
+      password: admin123
+      role: ADMIN
+    - username: user
+      password: user123
+      role: USER
+
+app:
+  rate-limit:
+    requests-per-minute: 100
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

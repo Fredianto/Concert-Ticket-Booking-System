@@ -1,0 +1,294 @@
+{
+  "info": {
+    "name": "Ticketing Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "End-to-end API collection for Concert Ticket Booking System"
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Get Admin Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "token"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('token', json.accessToken);",
+                  "if (json.userId) { pm.collectionVariables.set('userId', json.userId); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Concert",
+      "item": [
+        {
+          "name": "Seed Concert + Categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"concert\": {\n    \"name\": \"Coldplay Live\",\n    \"artist\": \"Coldplay\",\n    \"venue\": \"Jakarta Stadium\",\n    \"startsAt\": \"2026-12-20T20:00:00+07:00\",\n    \"timezone\": \"Asia/Jakarta\",\n    \"status\": \"UPCOMING\",\n    \"basePrice\": 500000,\n    \"capacity\": 10000\n  },\n  \"categories\": [\n    { \"categoryCode\": \"VIP\", \"categoryName\": \"VIP\", \"basePriceOverride\": 1500000, \"totalStock\": 500 },\n    { \"categoryCode\": \"STANDARD\", \"categoryName\": \"Standard\", \"basePriceOverride\": 700000, \"totalStock\": 3000 },\n    { \"categoryCode\": \"GA\", \"categoryName\": \"General Admission\", \"basePriceOverride\": 400000, \"totalStock\": 6500 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/concerts/seed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "concerts", "seed"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('concertId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Concerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/concerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "concerts"]
+            }
+          }
+        },
+        {
+          "name": "Get Pricing",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/concerts/{{concertId}}/pricing",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "concerts", "{{concertId}}", "pricing"]
+            }
+          }
+        },
+        {
+          "name": "Get Availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/concerts/{{concertId}}/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "concerts", "{{concertId}}", "availability"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Booking",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"concertId\": \"{{concertId}}\",\n  \"categoryCode\": \"VIP\",\n  \"quantity\": 2,\n  \"idempotencyKey\": \"{{idempotencyKey}}\",\n  \"correlationId\": \"demo-corr-001\",\n  \"holdMinutes\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('bookingId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "Pay Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"CREDIT_CARD\",\n  \"providerRef\": \"trx-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "pay"]
+            }
+          }
+        },
+        {
+          "name": "Deliver Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/deliver",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "deliver"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reporting",
+      "item": [
+        {
+          "name": "Settlement by Concert",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/concerts/{{concertId}}/settlement",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "concerts", "{{concertId}}", "settlement"]
+            }
+          }
+        },
+        {
+          "name": "Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "token", "value": "" },
+    { "key": "concertId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "idempotencyKey", "value": "idem-001" }
+  ]
+}
